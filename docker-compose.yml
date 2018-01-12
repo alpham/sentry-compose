@@ -7,30 +7,32 @@
   nginx:
     image: nginx
     ports:
-      - "80:80"
+      - "9000:80"
     links:
       - sentry
     volumes:
-      - "/home/marius/sentry-compose/nginx.conf:/etc/nginx/nginx.conf"
+      - "/sentry/sentry-compose/nginx.conf:/etc/nginx/nginx.conf"
     restart: always
   sentry:
+    #ports:
+    #  - "9000:9000"
     build: .
     links:
      - redis
      - postgres
     env_file: ./secret_env_vars
     environment:
-      - SENTRY_SERVER_EMAIL=artbio.ibps@gmail.com
+      - SENTRY_SERVER_EMAIL=ahmed.magdy40@gmail.com
       - SENTRY_EMAIL_HOST=smtp.gmail.com
       - SENTRY_EMAIL_PORT=587
-      - SENTRY_EMAIL_USER=artbio.ibps@gmail.com
+      - SENTRY_EMAIL_USER=ahmed.magdy40@gmail.com
       - SENTRY_EMAIL_USE_TLS=yes
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_PASSWORD=sentryPa$$w0rd
       - POSTGRES_USER=sentry
     volumes_from:
       - data
     restart: always
-  celery.beat:
+  sentry.cron:
     build: .
     links:
      - redis
@@ -38,13 +40,13 @@
      - sentry
     env_file: ./secret_env_vars
     environment:
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_PASSWORD=sentryPa$$w0rd
       - POSTGRES_USER=sentry
     volumes_from:
       - data
     restart: always
-    command: sentry celery beat
-  celery.worker:
+    command: sentry run cron
+  sentry.worker:
     build: .
     links:
      - redis
@@ -52,19 +54,19 @@
      - sentry
     env_file: ./secret_env_vars
     environment:
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_PASSWORD=sentryPa$$w0rd
       - POSTGRES_USER=sentry
     volumes_from:
       - data
     restart: always
-    command: sentry celery worker
+    command: sentry run worker
   redis:
-    image: redis
+    image: redis:4.0
     volumes_from:
       - data
     restart: always
   postgres:
-    image: postgres
+    image: postgres:9.5
     volumes_from:
       - data
     restart: always
